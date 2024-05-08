@@ -1,56 +1,91 @@
 import socket
+import json
+import os
 
-inventory = {
-    "Epoxy Tape": 1,
-    "Shims": 6,
-    "Epoxy mixing buckets": 12,
-    "MICA powder": 1,
-    "Titebond 3": 1,
-    "Sandpaper": {
-        "120 grit": 5,
-        "180 grit": 5,
-        "220 grit": 5,
-        "320 grit": 15
-    }
-}
+INVENTORY_FILE = "C:\\Woodworking\\Development\\Woodworking-Development\\Networking\\inventory.json"
 
+# Initialize inventory or load from the file
+if os.path.exists(INVENTORY_FILE):
+    try:
+        with open(INVENTORY_FILE, 'r') as file:
+            inventory = json.load(file)
+    except (json.JSONDecodeError, IOError) as e:
+        print(f"Error loading inventory file: {e}")
+        inventory = {}
+else:
+    inventory = {}
+
+# Function to save the inventory
+def save_inventory():
+    with open(INVENTORY_FILE, 'w') as file:
+        json.dump(inventory, file, indent=4)
+
+# Initialize server socket
 serversocket = socket.socket()
-print ("Socket successfully created")
- 
+print("Socket successfully created")
 
 port = 38204
- 
 
+# Bind the socket
 serversocket.bind(('', port))
-print (f"socket binded to {port}")
- 
-# put the socket into listening mode
-serversocket.listen(5)    
-print ("socket is listening")
- 
-# a forever loop until we interrupt it or an error occurs
+print(f"socket binded to {port}")
+
+# Put the socket into listening mode
+serversocket.listen(5)
+print("socket is listening")
+
+# Start accepting clients
 try:
     while True:
-    
-        # Establish connection with client.
-        (client, address) = serversocket.accept()
-        print ('Got connection from', address )
-    
-        # send a thank you message to the client.
-        client.send(b'Thank you for connecting')
+        client, address = serversocket.accept()
+        print('Got connection from', address)
 
-        data = client.recv(1024)
-        print(data)
+        client.send(b'Thank you for connecting\n')
 
-        if data == b"y":
-            for item in inventory:
-                to_send = f"{item}: {inventory[item]}"
-                client.send(bytes(to_send, "utf-8"))
-                print(f"{item} sent")
-            client.send(bytes("stop", "utf-8"))
-        else:
-            client.send(b"Inventory not requested")
-            print("Inventory not sent")
+        try:
+            data = client.recv(1024).strip()
+            if not data.isdigit():
+                client.send(b"Invalid option\n")
+                client.close()
+                continue
+
+            option = int(data)
+            print(f"Received option: {option}")
+
+            if option == 1:
+                for item, value in inventory.items():
+                    to_send = f"{item}: {value}\n"
+                    client.send(bytes(to_send, "utf-8"))
+                    print(f"{item} sent")
+                client.send(b"stop\n")
+                print("Sent stop")
+
+            elif option == 2:
+                item = client.recv(1024).decode("utf-8").strip()
+                qty = int(client.recv(1024).strip())
+
+                # Update the inventory
+                if item in inventory and isinstance(inventory[item], dict):
+                    subitem = client.recv(1024).decode("utf-8").strip()
+                    inventory[item][subitem] = qty
+                    print(f"Updated {item} ({subitem}): {qty}")
+                else:
+                    inventory[item] = qty
+                    print(f"Updated {item}: {qty}")
+
+                save_inventory()
+                client.send(b"Inventory updated\n")
+            else:
+                client.send(b"Invalid option\n")
+                print("Invalid option sent")
+
+        except (ValueError, KeyError) as e:
+            print(f"Error processing client request: {e}")
+            client.send(b"Error processing request\n")
+
+        finally:
+            client.close()
 
 finally:
     serversocket.close()
+    print("Socket closed")

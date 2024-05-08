@@ -13,26 +13,43 @@ s.connect(('127.0.0.1', port))
 print(s.recv(1024))
 
 while True:
-    answer = int(input("1. print inventory\n2. Add Inventory\n3. something else\n-------------\nEnter Option: "))
+    try:
+        answer = int(input("1. print inventory\n2. Add Inventory\n3. something else\n-------------\nEnter Option: "))
+        s.send(bytes(str(answer), "utf-8"))
 
-    if answer == 1:
+        if answer == 1:
 
-        inventory = []
+            inventory = []
 
-        while True:
-            received = (s.recv(1024))
+            while True:
+                received = s.recv(1024).decode("utf-8").strip()
 
-            if received == b'stop':
-                break
-            else:
-                inventory.append(str(received, encoding="utf-8"))
+                if received == 'stop':
+                    break
+                else:
+                    inventory.append(received)
 
-        print(inventory)
+            print("\nInventory List:")
+            for item in inventory:
+                print(item)
+            print("-------------")
 
-    elif answer == 2:
+        elif answer == 2:
+            item = input("What item are you adding?")
+            qty = input("How many of that item are you adding?")
 
-    elif answer == 0:
-        break
+            s.send(bytes(item, "utf-8"))
+            s.send(bytes(qty, "utf-8"))
+            print(f"Sent {item}: {qty} to inventory")
+
+        elif answer == 0:
+            break
+
+        else:
+            print("Invalid option. Please try again.")
+
+    except ValueError:
+        print("Invalid input. Please enter a valid number.")
     
  
 # close the connection
