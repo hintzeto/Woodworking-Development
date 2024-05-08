@@ -12,13 +12,27 @@ s.connect(('127.0.0.1', port))
 # receive data from the server
 print(s.recv(1024))
 
-s.send(bytes(input("Do you want to get invetory information? (y/n)").lower(), "utf-8"))
+while True:
+    answer = int(input("1. print inventory\n2. Add Inventory\n3. something else\n-------------\nEnter Option: "))
 
-loop_count = int.from_bytes(s.recv(4096), "little")
+    if answer == 1:
 
-for i in range(loop_count):
-    received = str(s.recv(1024))
-    print(received)
+        inventory = []
+
+        while True:
+            received = (s.recv(1024))
+
+            if received == b'stop':
+                break
+            else:
+                inventory.append(str(received, encoding="utf-8"))
+
+        print(inventory)
+
+    elif answer == 2:
+
+    elif answer == 0:
+        break
     
  
 # close the connection
