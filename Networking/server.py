@@ -42,49 +42,45 @@ try:
 
         client.send(b'Thank you for connecting\n')
 
-        try:
-            data = client.recv(1024).strip()
-            if not data.isdigit():
-                client.send(b"Invalid option\n")
-                client.close()
-                continue
-
-            option = int(data)
-            print(f"Received option: {option}")
-
-            if option == 1:
-                for item, value in inventory.items():
-                    to_send = f"{item}: {value}\n"
-                    client.send(bytes(to_send, "utf-8"))
-                    print(f"{item} sent")
-                client.send(b"stop\n")
-                print("Sent stop")
-
-            elif option == 2:
-                item = client.recv(1024).decode("utf-8").strip()
-                qty = int(client.recv(1024).strip())
-
-                # Update the inventory
-                if item in inventory and isinstance(inventory[item], dict):
-                    subitem = client.recv(1024).decode("utf-8").strip()
-                    inventory[item][subitem] = qty
-                    print(f"Updated {item} ({subitem}): {qty}")
-                else:
-                    inventory[item] = qty
-                    print(f"Updated {item}: {qty}")
-
-                save_inventory()
-                client.send(b"Inventory updated\n")
-            else:
-                client.send(b"Invalid option\n")
-                print("Invalid option sent")
-
-        except (ValueError, KeyError) as e:
-            print(f"Error processing client request: {e}")
-            client.send(b"Error processing request\n")
-
-        finally:
+        data = client.recv(1024).strip()
+        if not data.isdigit():
+            client.send(b"Invalid option\n")
             client.close()
+            continue
+
+        option = int(data)
+        print(f"Received option: {option}")
+
+        if option == 1:
+            for item, value in inventory.items():
+                to_send = f"{item}: {value}\n"
+                client.send(bytes(to_send, "utf-8"))
+                print(f"{item} sent")
+            client.send(b"stop\n")
+            print("Sent stop")
+
+        elif option == 2:
+            item = client.recv(1024).decode("utf-8").strip()
+            qty = int(client.recv(1024).strip())
+
+            # Update the inventory
+            if item in inventory and isinstance(inventory[item], dict):
+                subitem = client.recv(1024).decode("utf-8").strip()
+                inventory[item][subitem] = qty
+                print(f"Updated {item} ({subitem}): {qty}")
+            else:
+                inventory[item] = qty
+                print(f"Updated {item}: {qty}")
+
+            save_inventory()
+            client.send(b"Inventory updated\n")
+        else:
+            client.send(b"Invalid option\n")
+            print("Invalid option sent")
+
+except (ValueError, KeyError) as e:
+    print(f"Error processing client request: {e}")
+    client.send(b"Error processing request\n")
 
 finally:
     serversocket.close()
