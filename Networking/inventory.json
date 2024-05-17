@@ -7,8 +7,7 @@
     "Sandpaper": {
         "120 grit": 5,
         "180 grit": 5,
-        "220 grit": 5
-    },
-    "Sandpaper 320 grit": 15,
-    "shims": 10
+        "220 grit": 5,
+        "320 grit": 15
+    }
 }
