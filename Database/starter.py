@@ -10,10 +10,16 @@ os.environ["GOOGLE_CLOUD_PROJECT"] = "woodworking-inventory"  # Replace with you
 default_app = firebase_admin.initialize_app()
 db = firestore.client()
 
-doc_ref = db.collection("users").document("thintze")
-doc_ref.set({"first": "Talon", "last": "Hintze", "born": 2001})
+user_ref = db.collection("users").document("thintze")
+user_ref.set({"first_name": "Talon", "last_name": "Hintze", "birth_year": 2001})
 
-with open('Networking\inventory.json', 'r') as file:
+with open('Networking\\inventory.json', 'r') as file:
     data = json.load(file)
 
-db.collection("Inventory")
+    inventory_ref = db.collection("materials").document("inventory")
+    inventory_ref.set({"inventory": data})
+
+print("Done")
+
+#### User Inputs
+
