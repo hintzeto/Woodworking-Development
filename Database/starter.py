@@ -64,28 +64,56 @@ while True:
 
 
 
-        elif answer == 2: #Add Data
-            input_choice = int(input("Where would you like to add data?\n1. Add a New Collection\n2. Add To an Existing Collection"))
-
+        elif answer == 2: # Add Data
+            input_choice = int(input("Where would you like to add data?\n1. Add a New Collection\n2. Add To an Existing Collection: "))
             if input_choice == 1:
-                collection_name = input("What is the name of the collection?")
-                num_docs = int(input("How many documents do you want to add?"))
-
+                collection_name = input("Enter the name of the new collection: ")
+                num_docs = int(input("How many documents do you want to add? "))
                 for i in range(num_docs):
                     use_custom_id = input(f"Do you want to specify a custom ID for document {i+1}? (y/n): ").strip().lower()
                     if use_custom_id == 'y':
                         doc_id = input(f"Enter document ID for document {i+1}: ")
                     else:
-                        doc_id = None
-
+                        doc_id = None  # Let Firestore auto-generate the ID
+                        
                     data_dict = input_data()
                     if doc_id:
                         db.collection(collection_name).document(doc_id).set(data_dict)
-                        print(f"Document {doc_id} added to collection {collection_name}")
-
+                        print(f"Document {doc_id} added to collection {collection_name}.")
                     else:
                         doc_ref = db.collection(collection_name).add(data_dict)
                         print(f"Document with auto-generated ID {doc_ref[1].id} added to collection {collection_name}.")
+                        
+            elif input_choice == 2:
+                collections = db.collections()
+                collection_list = []
+                print("Collections in the database:")
+                for collection in collections:
+                    print(f'{len(collection_list) + 1}. {collection.id}')
+                    collection_list.append(collection.id)
+                collection_choice = int(input("Enter the number of the collection you want to add data to: "))
+                if 1 <= collection_choice <= len(collection_list):
+                    collection_name = collection_list[collection_choice - 1]
+                    num_docs = int(input("How many documents do you want to add? "))
+                    for i in range(num_docs):
+                        use_custom_id = input(f"Do you want to specify a custom ID for document {i+1}? (y/n): ").strip().lower()
+                        if use_custom_id == 'y':
+                            doc_id = input(f"Enter document ID for document {i+1}: ")
+                        else:
+                            doc_id = None  # Let Firestore auto-generate the ID
+
+                        data_dict = input_data()
+                        if doc_id:
+                            db.collection(collection_name).document(doc_id).set(data_dict)
+                            print(f"Document {doc_id} added to collection {collection_name}.")
+                        else:
+                            doc_ref = db.collection(collection_name).add(data_dict)
+                            print(f"Document with auto-generated ID {doc_ref[1].id} added to collection {collection_name}.")
+                else:
+                    print("Invalid collection number. Please try again.")
+            else:
+                print("Invalid choice. Please try again.")
+                continue
                     
 
         
